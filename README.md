@@ -1,112 +1,122 @@
 # Pedestrian Attribute Recognition & Tracking
 
-**Computer Vision · Deep Learning · Multi-Object Tracking · Multitask Learning**
+**Computer Vision | Deep Learning | Multi-Object Tracking | Multitask Learning**
 
-An end-to-end Computer Vision system for detecting, tracking and analyzing pedestrians in video sequences, combining object detection, multi-object tracking and deep learning-based attribute recognition.
+An end-to-end computer vision system designed to detect, track and analyze pedestrians in surveillance videos, combining object detection, multi-object tracking, behavior analysis and deep learning-based attribute recognition.
 
-Developed as an academic group project during the Master's Degree in Computer Engineering, specializing in Artificial Intelligence and Intelligent Robotics at the **University of Salerno**.
+Developed as a team project during the Master's Degree in Computer Engineering at the **University of Salerno**.
 
 ## 🎯 Project Overview
 
-The system processes surveillance video to identify pedestrians, analyze their movements and recognize visual attributes.
+The system integrates multiple computer vision components to:
 
-**Main functionalities:**
-- **Pedestrian Detection:** Identify pedestrians using YOLOv8m.
-- **Multi-Object Tracking:** Maintain consistent identities across video frames using BoT-SORT and re-identification.
-- **Behavior Analysis:** Detect and count pedestrian crossings along predefined directional lines.
-- **Attribute Recognition:** Predict three pedestrian attributes: gender, bag presence and hat presence.
-- **Structured Output:** Export video analysis results in JSON format.
+- Detect pedestrians using **YOLOv8m**.
+- Track individuals across video frames with **BoT-SORT and Re-identification**.
+- Analyze trajectories and count directional line crossings.
+- Recognize pedestrian attributes: gender, bag presence and hat presence.
+- Generate structured video analysis results.
 
-## 🧠 Architecture & Technical Approach
+<img width="526" height="291" alt="image" src="https://github.com/user-attachments/assets/3da14e6f-2d5f-4155-9880-0fdef86149e5" />
 
-The system combines detection, tracking and multitask classification in a unified video processing pipeline.
+## 🧠 Technical Architecture
 
-**1. Detection & Tracking**
+### 1. Pedestrian Detection & Tracking
 
-YOLOv8m generates pedestrian bounding boxes, while BoT-SORT performs multi-object tracking with re-identification to maintain individual identities across frames.
+**YOLOv8m** is used for pedestrian detection, while **BoT-SORT** maintains consistent identities across frames.
 
-**2. Pedestrian Behavior Analysis**
+An OSNet-based Re-identification model supports identity association after temporary occlusions.
 
-Tracked trajectories are analyzed to detect line crossings and evaluate their direction, enabling directional pedestrian counting.
+### 2. Behavior Analysis & Line Mapping
 
-**3. Multitask Attribute Recognition**
+Pedestrian movements are analyzed to identify crossings of two predefined directional lines.
 
-A deep learning model based on **ConvNeXt Base** performs feature extraction through a shared backbone.
+The system also implements a 3D-to-2D projection approach based on the pinhole camera model, rotation matrices and camera parameters to map directional lines onto the image plane.
 
-The architecture integrates:
-- **CBAM Attention:** Enhances relevant visual features through channel and spatial attention.
-- **Task-Specific Classification Heads:** Three separate branches for pedestrian attribute prediction.
-- **Transfer Learning:** Fine-tuning of pre-trained features for pedestrian analysis.
-- **GradNorm:** Dynamic loss weighting to balance the different classification tasks.
-- **Masked Losses:** Handling missing dataset annotations during training.
+### 3. Multitask Deep Learning
 
-To improve prediction reliability, attribute recognition is performed periodically and aggregated over time. Predictions on heavily overlapping pedestrians are deferred to reduce ambiguous classifications.
+The attribute recognition model uses a **ConvNeXt Base** backbone with a shared feature extraction architecture and three task-specific classification heads.
+
+Main architectural components:
+
+- **ConvNeXt Base:** Shared feature extraction with transfer learning.
+- **CBAM Attention:** Channel and spatial attention for improved feature representation.
+- **Multitask Learning:** Simultaneous prediction of three pedestrian attributes.
+- **GradNorm:** Adaptive task-loss balancing during training.
+- **Masked Loss:** Handling missing attribute annotations.
+
+### 4. Temporal Attribute Aggregation
+
+Attribute predictions are periodically collected during pedestrian tracking and aggregated using majority voting.
+
+The system also uses a confidence strategy based on bounding-box overlap, postponing classification when the Intersection over Union (IoU) exceeds 0.30.
 
 ## 📊 Experimental Results
 
-The multitask model was trained and evaluated using an annotated pedestrian attribute dataset.
+The multitask architecture was trained using:
 
-| Metric | Reported Result |
-|---|---|
-| Training Images | 93,081 |
-| Validation Images | 12,161 |
-| Attribute Recognition F1-score | Approximately 90% |
-| Gender Test Loss | 0.1935 |
-| Bag Test Loss | 0.3607 |
-| Hat Test Loss | 0.0745 |
+- **93,081 training images**
+- **12,161 validation images**
+- **Optimizer:** AdamW
+- **Batch size:** 128
+- **Data augmentation:** Horizontal flipping and random brightness/contrast adjustments
 
-The reported F1-score summarizes the attribute recognition performance, not the accuracy of pedestrian detection or tracking.
+### Classification Performance
 
-**Challenges and limitations**
+| Attribute | Accuracy | Weighted F1-score |
+|---|---|---|
+| Gender | 94% | 0.94 |
+| Bag Presence | 90% | 0.90 |
+| Hat Presence | 98% | 0.98 |
 
-- Identity switches during heavy occlusions.
-- Reduced tracking reliability for distant pedestrians.
-- Class imbalance and missing annotations in the attribute dataset.
+The model achieved strong classification results, although class imbalance affected performance on underrepresented categories.
+
+In particular, the Bag class obtained an F1-score of 0.70, illustrating the importance of evaluating individual class performance alongside aggregated metrics.
 
 ## 🛠️ Technologies
 
 **Programming:** Python
 
-**Computer Vision:** YOLOv8m, BoT-SORT, Object Detection, Multi-Object Tracking, Re-identification
+**Computer Vision:** YOLOv8, BoT-SORT, Object Tracking, Re-identification
 
-**Deep Learning:** ConvNeXt, CBAM, Transfer Learning, Multitask Learning, GradNorm
+**Deep Learning:** ConvNeXt, CBAM, Transfer Learning, Multitask Learning
 
-## 📁 Repository Structure
+**Training Techniques:** AdamW, GradNorm, Data Augmentation, Masked Losses
 
-- `src/main.py` — Application entry point
-- `src/inference.py` — Inference module
+## 📁 Project Structure
+
+- `src/main.py` — Main application
+- `src/inference.py` — Inference pipeline
 - `src/feature_extractor.py` — Feature extraction
-- `src/classification_head.py` — Attribute classification
+- `src/classification_head.py` — Attribute classification heads
 - `src/multitask_nn.py` — Multitask neural network
-- `src/mapping.py` — Mapping module
-- `src/utils/` — Supporting utilities
-- `src/requirements.txt` — Project dependencies
+- `src/mapping.py` — Mapping utilities
+- `src/utils/` — Supporting modules
+- `src/requirements.txt` — Dependencies
 
-## ⚙️ Installation & Usage
+## ⚙️ Installation
 
-Install the required Python dependencies:
+Install the project dependencies:
 
 `pip install -r src/requirements.txt`
 
-Example execution:
+Additional input videos, configuration files and model assets may be required to run the complete pipeline.
 
-`python src/main.py --video video/video.mp4 --results results/results.txt --configuration configuration/config.txt`
+## 🔍 Challenges & Future Improvements
 
-The paths are illustrative and must be adapted to the input files. Required configuration files and model assets must be available. Execution instructions should be verified against the current code.
+- Handling identity switches in crowded scenes.
+- Improving detection and tracking of distant pedestrians.
+- Addressing class imbalance in attribute recognition.
+- Optimizing inference for real-time applications.
 
-## 🔮 Future Improvements
+## 👥 Project Team
 
-- Improve re-identification under occlusions.
-- Optimize the pipeline for real-time inference.
-- Extend recognition to additional pedestrian attributes.
-- Evaluate robustness across different surveillance environments.
+**University of Salerno — Master's Degree in Computer Engineering**
 
-## 👨‍💻 Project Information
+Academic Year 2024–2025
 
-**Academic Project:** Pedestrian Attribute Recognition
+- Andrea Rescigno
+- Pietro Zappullo
+- Mattia Lamberti
+- Pasquale Petti
 
-**Institution:** University of Salerno
-
-**Program:** Master's Degree in Computer Engineering — Artificial Intelligence and Intelligent Robotics
-
-**Development:** Collaborative university project involving Andrea Rescigno and team members.
+Collaborative academic project developed for the Artificial Vision course.
